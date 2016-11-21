@@ -1,0 +1,32 @@
+﻿@{
+    ViewBag.Title = "Home Page";
+}
+
+<hr />
+<div class="row">
+    <div class="col-xs-12">
+        <span class="help-block">
+            The below form has been embedded using an iframe, and will be loaded under the same origin (protocol, address, and port).
+        </span>
+        <div style="overflow:auto">
+            <iframe src="~/CrossSiteRequestForgeryForm.html" frameborder="0" height="800" style="width:100%;"></iframe>
+        </div>
+    </div>
+</div>
+
+<hr />
+<div class="row">
+    <div class="col-xs-6">
+        <span class="help-block">
+            To open the CSRF form in another origin, right-click this link and select <b>"Copy Link Address"</b>.
+            Then open a new tab and paste the url in the address bar.
+            This will open the form in a different origin by changing the protocol (<b>file:///</b>).
+            You cannot click this link directly because the browser will not open local files from origins using the <b>http://</b> protocol.
+        </span>
+    </div>
+    <div class="col-xs-6">
+        <a href='file:///@Server.MapPath("~/CrossSiteRequestForgeryForm.html")'>
+            file:///@Server.MapPath("~/CrossSiteRequestForgeryForm.html")
+        </a>
+    </div>
+</div>

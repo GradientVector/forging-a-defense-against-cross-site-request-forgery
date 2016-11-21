@@ -1,0 +1,161 @@
+﻿<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Cross-site Request Forgery (CSRF) Form</title>
+    <link rel="stylesheet" href="Content/bootstrap.min.css" />
+    <link rel="stylesheet" href="Content/site.css" />
+    <script type="text/javascript" src="Scripts/jquery-1.10.2.min.js"></script>
+    <script type="text/javascript" src="Scripts/modernizr-2.6.2.js"></script>
+    <script type="text/javascript" src="Scripts/bootstrap.min.js"></script>
+    <script type="text/javascript" src="Scripts/respond.min.js"></script>
+    <script type="text/javascript">
+        // Function to delete all cookies
+        var deleteCookie = function (name) {
+            document.cookie = name + '=;expires=Thu, 01 Jan 1970 00:00:01 GMT;';
+        };
+        var deleteAllCookies = function () {
+            var cookies = document.cookie.split(";");
+            for (var i = 0; i < cookies.length; i++) {
+                deleteCookie(cookies[i].split("=")[0]);
+            }
+        }
+        // Function to update the Response Text Box
+        function updateResponseTextbox(response) {
+            var responseTextbox = $('#Response');
+            var text = responseTextbox.val();
+            var currentDatetime = (new Date()).toLocaleString();
+            text = currentDatetime + ': ' + response + '\n' + text;
+            responseTextbox.val(text);
+        }
+        // Function to post AJAX requests against a specified server.
+        function submitFormAjax() {
+            var url = $('#URL').val();
+            var data = $('#Data').val();
+            var method = $('#Method').val();
+            var contentType = $('#ContentType').val();
+            var dataType = $('#DataType').val();
+            var headers = $('#Headers').val();
+            // Send the AJAX request
+            $.ajax({
+                url: url,
+                data: data,
+                type: (method.length && /\S/.test(method)) ? method : 'post',
+                contentType: (contentType.length && /\S/.test(contentType)) ? contentType : 'application/json',
+                dataType: (dataType.length && /\S/.test(dataType)) ? dataType : 'json',
+                headers: (headers.length && /\S/.test(headers)) ? JSON.parse(headers) : {},
+                xhrFields: {
+                    withCredentials: true,
+                },
+            })
+            .then(
+            function (response) {
+                updateResponseTextbox(JSON.stringify(response));
+            },
+            function (jqXHR, textStatus, errorThrown) {
+                if (!errorThrown) { errorThrown = "see console log for more details" }
+                updateResponseTextbox(textStatus + " - " + errorThrown);
+            }
+            );
+        };
+
+        function submitFormDefault() {
+            var form = $('#Form')[0];
+            var url = $('#URL').val();
+            var method = $('#Method').val();
+            var headers = $('#Headers').val();
+            headers = (headers.length && /\S/.test(headers)) ? JSON.parse(headers) : {};
+            form.action = url;
+            form.type = method;
+            deleteAllCookies();
+            for (var header in headers) {
+                var cookie = header + "=" + headers[header];
+                document.cookie = cookie;
+            }
+            form.submit();
+        }
+    </script>
+</head>
+<body>
+    <nav class="navbar navbar-inverse navbar-fixed-top">
+        <div class="container">
+            <div class="navbar-header">
+                <a class="navbar-brand" href="#">Cross-site Request Forgery (CSRF) Form</a>
+            </div>
+        </div>
+    </nav>
+    <div class="container">
+        <hr />
+        <div class="row">
+            <div class="col-md-12">
+                <form class="form-horizontal" id="Form" 
+                      method="post" enctype="application/json" 
+                      onsubmit="event.preventDefault(); return submitFormAjax();">
+                    <div class="form-group">
+                        <label class="control-label col-md-2">URL</label>
+                        <div class="col-md-10">
+                            <input id="URL" name="URL" class="form-control" value="http://localhost:23961/api/Secret" />
+                        </div>
+                    </div>
+                    <div class="form-group">
+                        <label class="control-label col-md-2">Method</label>
+                        <div class="col-md-10">
+                            <input id="Method" name="Method" class="form-control" value="post" />
+                        </div>
+                    </div>
+                    <div class="form-group">
+                        <label class="control-label col-md-2">Content Type</label>
+                        <div class="col-md-10">
+                            <input id="ContentType" name="ContentType" class="form-control" value="application/json" />
+                        </div>
+                    </div>
+                    <div class="form-group">
+                        <label class="control-label col-md-2">Data Type</label>
+                        <div class="col-md-10">
+                            <input id="DataType" name="DataType" class="form-control" value="json" />
+                        </div>
+                    </div>
+                    <div class="form-group">
+                        <label class="control-label col-md-2">Headers</label>
+                        <div class="col-md-10">
+                            <textarea id="Headers" name="Headers" class="form-control" rows="5" style="width:100%;" placeholder="{}">
+{
+    "__RequestVerificationToken": "EuMIfzzFyc9POrEuBcHUpYFJEEt0M9isb6TtqNWr3LDTTbyFd4hYKToFIWuvyp-2azf8cuxouXy7PvRPu4hgYxd7SmBAdNsSUeD1_h-ZIDU1", 
+    "CsrfToken": "EuMIfzzFyc9POrEuBcHUpYFJEEt0M9isb6TtqNWr3LDTTbyFd4hYKToFIWuvyp-2azf8cuxouXy7PvRPu4hgYxd7SmBAdNsSUeD1_h-ZIDU1:DjAr0e9-HcELcg-G39G-w97jCBpafpnbR1q739tgQy-76DFi4PZ-J-cHjWCVZSd9VZqAhOEHxDWkWb55V_hBqEemPY-PqE0E-kT4Lr_Ngkdm1P1la3svApDDCpdutRRGOA7Th4yWUO3eRDqmDqiM_w2"
+}
+                            </textarea>
+                        </div>
+                    </div>
+                    <div class="form-group">
+                        <label class="control-label col-md-2">Data</label>
+                        <div class="col-md-10">
+                            <textarea id="Data" name="Data" class="form-control" rows="5" style="width:100%;" placeholder="{}">
+{
+    "__RequestVerificationToken": "DjAr0e9-HcELcg-G39G-w97jCBpafpnbR1q739tgQy-76DFi4PZ-J-cHjWCVZSd9VZqAhOEHxDWkWb55V_hBqEemPY-PqE0E-kT4Lr_Ngkdm1P1la3svApDDCpdutRRGOA7Th4yWUO3eRDqmDqiM_w2"
+}
+                            </textarea>
+                        </div>
+                    </div>
+                    <div class="form-group">
+                        <div class="col-md-offset-2 col-md-5">
+                            <button type="submit" class="form-control btn btn-primary">Submit Request - Ajax</button>
+                            <span class="help-block">(submits the form using AJAX and displays results in Response textarea)</span>
+                        </div>
+                        <div class="col-md-5">
+                            <button type="button" class="form-control btn btn-primary" onclick="submitFormDefault()">Submit Request</button>
+                            <span class="help-block">(will redirect page to show JSON results)</span>
+                        </div>
+                    </div>
+                    <div class="row">
+                        <label class="control-label col-md-2">Response (JSON)</label>
+                        <div class="col-md-10">
+                            <textarea id="Response" name="Response" class="form-control" rows="5" style="width:100%;" readonly="readonly"></textarea>
+                        </div>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</body>
+</html>
